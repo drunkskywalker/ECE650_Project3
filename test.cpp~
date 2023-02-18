@@ -1,9 +1,0 @@
-#include <vector>
-
-using namespace std;
-
-class P {
- public:
-  vector<int> r;
-  P() : r(vector<int>()) {}
-};
