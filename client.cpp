@@ -13,12 +13,8 @@ int main(int argc, char * argv[]) {
   struct addrinfo host_info;
   struct addrinfo * host_info_list;
   const char * hostname = argv[1];
-  const char * port = "4444";
+  const char * port = argv[2];
 
-  if (argc < 2) {
-    cout << "Syntax: client <hostname>\n" << endl;
-    return 1;
-  }
 
   memset(&host_info, 0, sizeof(host_info));
   host_info.ai_family = AF_UNSPEC;
@@ -46,10 +42,11 @@ int main(int argc, char * argv[]) {
   if (status == -1) {
     cerr << "Error: cannot connect to socket" << endl;
     cerr << "  (" << hostname << "," << port << ")" << endl;
+
     return -1;
   }  //if
 
-  const char * message = "Hi there!";
+  const char * message = "GET / HTTP/1.1\r\nHost: www.google.com\r\nConnection: close\r\n\r\n";
   cout << "Client sent: " << message << endl;
   send(socket_fd, message, strlen(message), 0);
   char buffer[9];

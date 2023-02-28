@@ -4,6 +4,7 @@ all: $(TARGETS)
 clean:
 	rm -f $(TARGETS)
 
+
 client: client.cpp
 	g++ -g -o $@ $<
 
