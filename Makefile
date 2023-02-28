@@ -1,18 +1,18 @@
-TARGETS=client ringMaster s c
+TARGETS=ringMaster player
 
 all: $(TARGETS)
 clean:
 	rm -f $(TARGETS)
 
 
-client: client.cpp
-	g++ -g -o $@ $<
+#client: client.cpp#
+#	g++ -g -o $@ $<
 
-ringMaster: ringMaster.cpp
-	g++ -g -o $@ $<
+#ringMaster: ringMaster.cpp
+#	g++ -g -o $@ $<
  
-s: s.cpp
+ringMaster: ringMaster.cpp potato.hpp
 	g++ -g -o $@ $<
   
-c: c.cpp
+player: player.cpp potato.hpp
 	g++ -g -o $@ $<

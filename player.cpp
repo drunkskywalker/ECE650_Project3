@@ -304,8 +304,22 @@ class Player {
   }
 };
 
-int main() {
-  Player p("0", "4444");
-  p.init();
-  p.play();
+int main(int argc, char * argv[]) {
+  if (argc != 3) {
+    cout << "Syntax: player <machine_name> <port_num>" << endl;
+    return 1;
+  }
+
+  char * p;
+  const char * port_num = argv[2];
+  strtol(argv[2], &p, 10);
+  if (*p != '\0') {
+    cout << "Syntax error: expected a number as port_num" << endl;
+    return 1;
+  }
+
+
+  Player player(argv[1], port_num);
+  player.init();
+  player.play();
 }
