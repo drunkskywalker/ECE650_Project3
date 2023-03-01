@@ -152,11 +152,17 @@ class RingMaster {
   }
 
   void play() {
-    Potato p(hop_num);
+    Potato p;
+    //memset(&p, 0, sizeof(Potato));
     if (hop_num == 0) {
       close_connections();
     }
+    
+    
     else {
+    p.hops = hop_num;
+    p.count = 0;
+
       srand(time(NULL));
       int r = rand() % player_num;
       cout << "Ready to start the game, sending potato to player " << r << endl;
@@ -187,8 +193,10 @@ class RingMaster {
         }
       }
       //cout << last << endl;
-      recv(last, &state, sizeof(char), MSG_WAITALL);
-      recv(last, &p, sizeof(Potato), MSG_WAITALL);
+      memset(&state, 0, sizeof(char));
+      memset(&p, 0, sizeof(Potato));
+      recv(last, &state, sizeof(char), 0);
+      recv(last, &p, sizeof(Potato), 0);
       //  if (state != '1') {
       //  cerr << "bad transmission" << endl;
       //  exit(1);
@@ -227,8 +235,8 @@ int main(int argc, char * argv[]) {
     return 1;
   }
 
-  if (num_players < 1) {
-    cout << "Syntax error: num_players must be greater than 0" << endl;
+  if (num_players < 2) {
+    cout << "Syntax error: num_players must be greater than 1" << endl;
     return 1;
   }
   long num_hops = strtol(argv[3], &p, 10);
