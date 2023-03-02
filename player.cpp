@@ -75,10 +75,11 @@ class Player {
       exit(1);
     }
     int p = htons(addr_in->sin_port);
-    if(send(rm_fd, &p, sizeof(int), 0) < 0) {exit(1);}
+    if(send(rm_fd, &p, sizeof(int), 0) <= 0) {exit(1);}
     char host[100];
+    memset(host, 0, sizeof(host));
     gethostname(host, sizeof(host));
-    if(send(rm_fd, host, 100, 0) < 0) {exit(1);}
+    if(send(rm_fd, host, 100, 0) <= 0) {exit(1);}
 
     status = listen(my_fd, 100);
     if (status == -1) {
@@ -140,8 +141,8 @@ class Player {
 
   void init() {
     connect_server(rm_host, atoi(rm_port), &rm_fd);
-    if(recv(rm_fd, &player_no, sizeof(int), 0) < 0) {exit(1);}
-    if(recv(rm_fd, &player_tot, sizeof(int), 0) < 0) {exit(1);}
+    if(recv(rm_fd, &player_no, sizeof(int), 0) <= 0) {exit(1);}
+    if(recv(rm_fd, &player_tot, sizeof(int), 0) <= 0) {exit(1);}
     cout << "Connected as player " << player_no << " out of " << player_tot
          << " total players" << endl;
     if (player_no == player_tot - 1) {
@@ -149,12 +150,12 @@ class Player {
       int next_port;
 
       char prev_host[100];
-      if(recv(rm_fd, &prev_host, 100, 0) < 0) {exit(1);}
-      if(recv(rm_fd, &prev_port, sizeof(int), 0) < 0) {exit(1);}
+      if(recv(rm_fd, &prev_host, 100, 0) <= 0) {exit(1);}
+      if(recv(rm_fd, &prev_port, sizeof(int), 0) <= 0) {exit(1);}
 
       char next_host[100];
       if(recv(rm_fd, &next_host, 100, 0) < 0) {exit(1);}
-      if(recv(rm_fd, &next_port, sizeof(int), 0) < 0) {exit(1);}
+      if(recv(rm_fd, &next_port, sizeof(int), 0) <= 0) {exit(1);}
 
       connect_server(prev_host, prev_port, &prev_fd);
       connect_server(next_host, next_port, &next_fd);
@@ -172,15 +173,15 @@ class Player {
 
       int prev_port;
       char prev_host[100];
-      if(recv(rm_fd, &prev_host, 100, 0) < 0) {exit(1);}
-      if(recv(rm_fd, &prev_port, sizeof(int), 0) < 0) {exit(1);}
+      if(recv(rm_fd, &prev_host, 100, 0) <= 0) {exit(1);}
+      if(recv(rm_fd, &prev_port, sizeof(int), 0) <= 0) {exit(1);}
 
       connect_server(prev_host, prev_port, &prev_fd);
       accept_request(my_fd, &next_fd);
     }
     char b = 'p';
-    if(send(rm_fd, &b, sizeof(char), 0) < 0) {exit(1);}
-    if(recv(rm_fd, &b, sizeof(char), MSG_WAITALL) < 0) {exit(1);}
+    if(send(rm_fd, &b, sizeof(char), 0) <= 0) {exit(1);}
+    if(recv(rm_fd, &b, sizeof(char), MSG_WAITALL) <= 0) {exit(1);}
     //cout << b << endl;
     if (b != 'r') {
       cerr << "server is not ready; quitting" << endl;
@@ -193,9 +194,9 @@ class Player {
     char n = '1';
     if (player_no == 0) {
       n = '0';
-      if(send(next_fd, &n, sizeof(char), 0) < 0) {exit(1);}
+      if(send(next_fd, &n, sizeof(char), 0) <= 0) {exit(1);}
       n = 'x';
-      if(recv(prev_fd, &n, sizeof(char), 0) < 0) {exit(1);}
+      if(recv(prev_fd, &n, sizeof(char), 0) <= 0) {exit(1);}
 
       //cout << "prev sent " << n << endl;
       /*
@@ -206,7 +207,7 @@ class Player {
       */
     }
     else {
-      if(recv(prev_fd, &n, sizeof(char), 0) < 0) {exit(1);}
+      if(recv(prev_fd, &n, sizeof(char), 0) <= 0) {exit(1);}
       //cout << "prev sent " << n << endl;
       /*if (n != '0') {
         cerr << "bad connection" << endl;
@@ -214,7 +215,7 @@ class Player {
       }
       */
       n++;
-      if(send(next_fd, &n, sizeof(char), 0) < 0) {exit(1);}
+      if(send(next_fd, &n, sizeof(char), 0) <= 0) {exit(1);}
     }
     //cout << "player connections ready" << endl;
   }
@@ -239,7 +240,13 @@ class Player {
         FD_SET(rm_fd, &fdset);
         FD_SET(prev_fd, &fdset);
         FD_SET(next_fd, &fdset);
-        int status = select(65536, &fdset, NULL, NULL, NULL);
+        
+        int curr_max = rm_fd;
+        if (curr_max < prev_fd) {curr_max = prev_fd;}
+        if (curr_max < next_fd) {curr_max = next_fd;}
+        
+        
+        int status = select(curr_max + 1, &fdset, NULL, NULL, NULL);
         if (status == -1) {
           cerr << "select() returned " << status << " with error code " << errno << endl;
           exit(1);
@@ -258,21 +265,21 @@ class Player {
         }
       }
 
-      if(recv(x, &b, sizeof(char), MSG_WAITALL) < 0) {exit(1);}
+      if(recv(x, &b, sizeof(char), MSG_WAITALL) <= 0) {exit(1);}
       if (b == '1') {
         close_connections();
         return;
       }
-      if(recv(x, &p, sizeof(Potato), MSG_WAITALL) < 0) {exit(1);}
+      if(recv(x, &p, sizeof(Potato), MSG_WAITALL) <= 0) {exit(1);}
       p.count++;
       if (p.count == p.hops) {
         b = 1;
         cout << "I'm it" << endl;
         p.players[p.count - 1] = player_no;
         p.players[p.count] = -1;
-        if(send(rm_fd, &b, sizeof(char), 0) < 0) {exit(1);}
-        if(send(rm_fd, &p, sizeof(Potato), 0) < 0) {exit(1);}
-        if(recv(rm_fd, &b, sizeof(char), 0) < 0) {exit(1);}
+        if(send(rm_fd, &b, sizeof(char), 0) <= 0) {exit(1);}
+        if(send(rm_fd, &p, sizeof(Potato), 0) <= 0) {exit(1);}
+        if(recv(rm_fd, &b, sizeof(char), 0) <= 0) {exit(1);}
         close_connections();
         return;
       }
@@ -298,8 +305,8 @@ class Player {
 
         p.players[p.count - 1] = player_no;
       }
-      if(send(x, &b, sizeof(char), 0) < 0) {exit(1);}
-      if(send(x, &p, sizeof(Potato), 0) < 0) {exit(1);}
+      if(send(x, &b, sizeof(char), 0) <= 0) {exit(1);}
+      if(send(x, &p, sizeof(Potato), 0) <= 0) {exit(1);}
     }
   }
 };
