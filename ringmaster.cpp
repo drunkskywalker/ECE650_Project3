@@ -97,12 +97,12 @@ class RingMaster {
         exit(1);
       }
       player_fd_no_map[i] = client_connection_fd;
-      send(client_connection_fd, &i, sizeof(int), 0);
-      send(client_connection_fd, &player_num, sizeof(int), 0);
+      if(send(client_connection_fd, &i, sizeof(int), 0) < 0) {exit(1);}
+      if(send(client_connection_fd, &player_num, sizeof(int), 0) < 0) {exit(1);}
 
       if (i != player_num - 1) {
-        recv(client_connection_fd, &this_port, sizeof(int), 0);
-        recv(client_connection_fd, this_ip, 100, 0);
+        if(recv(client_connection_fd, &this_port, sizeof(int), 0) < 0) {exit(1);}
+        if(recv(client_connection_fd, this_ip, 100, 0) < 0) {exit(1);}
       }
 
       if (i == 0) {
@@ -113,8 +113,8 @@ class RingMaster {
       }
 
       else {
-        send(client_connection_fd, prev_ip, 100, 0);
-        send(client_connection_fd, &prev_port, sizeof(prev_port), 0);
+        if(send(client_connection_fd, prev_ip, 100, 0) < 0) {exit(1);}
+        if(send(client_connection_fd, &prev_port, sizeof(prev_port), 0) < 0) {exit(1);}
 
         memcpy(prev_ip, this_ip, 100);
         prev_port = this_port;
@@ -123,8 +123,8 @@ class RingMaster {
 
       i++;
       if (i == player_num) {
-        send(client_connection_fd, first_ip, 100, 0);
-        send(client_connection_fd, &first_port, sizeof(first_port), 0);
+        if(send(client_connection_fd, first_ip, 100, 0) < 0) {exit(1);}
+        if(send(client_connection_fd, &first_port, sizeof(first_port), 0) < 0) {exit(1);}
         // cout << "Player " << 0 << " is ready to play" << endl;
       }
     }
@@ -132,20 +132,20 @@ class RingMaster {
     // validify connection
     char b;
     for (int i = 0; i < player_num; i++) {
-      recv(player_fd_no_map[i], &b, sizeof(char), 0);
+      if(recv(player_fd_no_map[i], &b, sizeof(char), 0) < 0) {exit(1);}
 
       if (b == 'p') {
         cout << "Player " << i << " is ready to play" << endl;
       }
       b = 'r';
-      send(player_fd_no_map[i], &b, sizeof(char), 0);
+      if(send(player_fd_no_map[i], &b, sizeof(char), 0) < 0) {exit(1);}
     }
   }
 
   void close_connections() {
     for (int i = 0; i < player_num; i++) {
       char state = '1';
-      send(player_fd_no_map[i], &state, sizeof(char), MSG_WAITALL);
+      if(send(player_fd_no_map[i], &state, sizeof(char), MSG_WAITALL) < 0) {exit(1);}
       close(player_fd_no_map[i]);
       close(socket_fd);
     }
@@ -156,6 +156,7 @@ class RingMaster {
     //memset(&p, 0, sizeof(Potato));
     if (hop_num == 0) {
       close_connections();
+      return;
     }
     
     
@@ -169,8 +170,8 @@ class RingMaster {
 
       // state: 0: potato; 1: stop
       char state = '0';
-      send(player_fd_no_map[r], &state, sizeof(char), 0);
-      send(player_fd_no_map[r], &p, sizeof(Potato), 0);
+      if(send(player_fd_no_map[r], &state, sizeof(char), 0) < 0) {exit(1);}
+      if(send(player_fd_no_map[r], &p, sizeof(Potato), 0) < 0) {exit(1);}
 
       //TODO: select
       fd_set fdset;
@@ -195,13 +196,14 @@ class RingMaster {
       //cout << last << endl;
       memset(&state, 0, sizeof(char));
       memset(&p, 0, sizeof(Potato));
-      recv(last, &state, sizeof(char), 0);
-      recv(last, &p, sizeof(Potato), 0);
+      if(recv(last, &state, sizeof(char), 0) < 0) {exit(1);}
+      if(recv(last, &p, sizeof(Potato), 0) < 0) {exit(1);}
       //  if (state != '1') {
       //  cerr << "bad transmission" << endl;
       //  exit(1);
       //}
       int i = 0;
+      if (p.hops == 0) {close_connections(); return;}
       cout << "Trace of potato:" << endl;
       while (p.players[i + 1] != -1) {
         cout << p.players[i] << ",";
