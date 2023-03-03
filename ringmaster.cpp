@@ -127,9 +127,9 @@ class RingMaster {
         if(send(client_connection_fd, &first_port, sizeof(first_port), 0) <= 0) {exit(1);}
         // cout << "Player " << 0 << " is ready to play" << endl;
       }
-      cout << i << endl;
+   //   cout << i << endl;
     }
-    cout << "begin validation" << endl;
+   // cout << "begin validation" << endl;
     // validify connection
     char b;
     for (int i = 0; i < player_num; i++) {
