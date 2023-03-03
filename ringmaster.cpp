@@ -86,8 +86,8 @@ class RingMaster {
     memset(&this_port, 0, sizeof(this_port));
     memset(&first_port, 0, sizeof(first_port));
 
-    int i = 0;
-    while (i < player_num) {
+
+    for (int i = 0; i < player_num; i ++) {
       struct sockaddr_storage socket_addr;
       socklen_t socket_addr_len = sizeof(socket_addr);
       int client_connection_fd;
@@ -122,19 +122,19 @@ class RingMaster {
         //cout << "Player " << i << " is ready to play" << endl;
       }
 
-      i++;
-      if (i == player_num) {
+      if (i == player_num - 1) {
         if(send(client_connection_fd, first_ip, 100, 0) <= 0) {exit(1);}
         if(send(client_connection_fd, &first_port, sizeof(first_port), 0) <= 0) {exit(1);}
         // cout << "Player " << 0 << " is ready to play" << endl;
       }
+      cout << i << endl;
     }
-    
+    cout << "begin validation" << endl;
     // validify connection
     char b;
     for (int i = 0; i < player_num; i++) {
       if(recv(player_fd_no_map[i], &b, sizeof(char), 0) <= 0) {exit(1);}
-
+      cout << b;
       if (b == 'p') {
         cout << "Player " << i << " is ready to play" << endl;
       }
@@ -153,6 +153,8 @@ class RingMaster {
   }
 
   void play() {
+  
+  
     Potato p;
     memset(&p, 0, sizeof(Potato));
     if (hop_num == 0) {
